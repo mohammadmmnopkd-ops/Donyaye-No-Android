@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="fa" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#08111d">
+<title>مرکز مدیریت دنیای نو</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#070c13;color:#eef4fb;font-family:Tahoma,Arial,sans-serif}
+.wrap{max-width:760px;margin:auto;padding:12px}.top{position:sticky;top:0;z-index:5;background:#0b1420ee;backdrop-filter:blur(12px);padding:12px;border-bottom:1px solid #243447}
+h1{font-size:20px;margin:0 0 5px}.sub{font-size:12px;color:#91a4b9}.card{background:#101a26;border:1px solid #25364b;border-radius:16px;padding:14px;margin:10px 0;box-shadow:0 8px 25px #0004}
+.tabs{display:grid;grid-template-columns:1fr 1fr;gap:8px}.tabs button,.actions button{border:1px solid #334a63;background:#162538;color:#fff;border-radius:12px;padding:12px;font-size:14px}
+.tabs button.active{background:#214b70}.actions{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+input,select{width:100%;padding:12px;border-radius:12px;border:1px solid #334a63;background:#09121d;color:#fff;font-size:15px}
+.status{display:grid;grid-template-columns:1fr 1fr;gap:8px}.stat{background:#0b141f;border-radius:12px;padding:12px}.num{font-size:20px;font-weight:bold}.lbl{font-size:11px;color:#93a7bc}
+pre{white-space:pre-wrap;word-break:break-word;background:#070d14;border-radius:12px;padding:12px;min-height:120px;font-size:11px;overflow:auto}
+.badge{display:inline-block;padding:5px 8px;border-radius:999px;background:#17324a;color:#a9d6ff;font-size:11px}
+@media(max-width:430px){.actions{grid-template-columns:1fr}.card{padding:11px}.tabs button{padding:10px}}
+</style>
+</head>
+<body><div class="top"><div class="wrap">
+<h1>🎛️ مرکز مدیریت دنیای نو</h1><div class="sub">مدیریت بازی و گروه هوش مصنوعی — نسخه موبایل</div>
+</div></div>
+<div class="wrap">
+<div class="card">
+<div class="tabs">
+<button id="adminTab" onclick="setRole('admin')">🛡️ پنل مدیریت</button>
+<button id="aiTab" onclick="setRole('ai')">🤖 گروه AI</button>
+</div>
+<div style="margin-top:10px"><input id="pw" type="password" inputmode="text" autocomplete="off" placeholder="رمز را وارد کنید"></div>
+<div class="actions" style="margin-top:8px"><button onclick="login()">ورود امن</button><button onclick="logout()">خروج</button></div>
+</div>
+
+<div class="card">
+<div class="status">
+<div class="stat"><div class="num" id="worlds">—</div><div class="lbl">سرورها</div></div>
+<div class="stat"><div class="num" id="humans">—</div><div class="lbl">بازیکنان واقعی</div></div>
+<div class="stat"><div class="num" id="bots">—</div><div class="lbl">کشورهای AI</div></div>
+<div class="stat"><div class="num" id="director">—</div><div class="lbl">وضعیت AI Director</div></div>
+</div>
+</div>
+
+<div class="card">
+<div class="actions">
+<button onclick="dashboard()">📊 وضعیت</button>
+<button onclick="diagnose()">🔎 عیب‌یابی</button>
+<button onclick="plan()">🧠 برنامه به‌روزرسانی</button>
+<button id="runBtn" onclick="runAI()">⚙️ اجرای AI</button>
+<button id="alertsBtn" onclick="clearAlerts()">🧹 پاک‌کردن هشدارها</button>
+</div>
+</div>
+
+<div class="card">
+<div class="sub">خروجی سرور</div>
+<pre id="out">ابتدا با رمز مجاز وارد شوید.</pre>
+</div>
+</div>
+<script>
+let role='admin',pw='';
+function setRole(r){role=r;document.querySelectorAll('.tabs button').forEach(x=>x.classList.remove('active'));document.getElementById(r==='admin'?'adminTab':'aiTab').classList.add('active')}
+async function api(path,body={}){
+ const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({...body,password:pw})});
+ const j=await r.json().catch(()=>({ok:false,error:'invalid server response'}));
+ document.getElementById('out').textContent=JSON.stringify(j,null,2);
+ if(j.ok) updateStats(j);
+ else if(r.status===401) document.getElementById('out').textContent='رمز نادرست یا نشست منقضی شده است.';
+ return j;
+}
+function login(){pw=document.getElementById('pw').value.trim();if(!pw)return;dashboard()}
+function logout(){pw='';document.getElementById('pw').value='';document.getElementById('out').textContent='خارج شدید.'}
+function dashboard(){api(role==='admin'?'/api/admin/dashboard':'/api/ai-team/dashboard')}
+function diagnose(){api('/api/ai-team/diagnose')}
+function plan(){api('/api/ai-team/update-plan')}
+function runAI(){if(role!=='admin')return alert('اجرای مستقیم AI فقط از پنل مدیریت مجاز است.');let id=prompt('شناسه سرور:');if(id)api('/api/admin/ai/run',{worldId:id})}
+function clearAlerts(){if(role!=='admin')return;api('/api/admin/maintenance',{action:'clear-ai-alerts'})}
+function updateStats(j){
+ const ws=j.worlds||[];document.getElementById('worlds').textContent=ws.length;
+ document.getElementById('humans').textContent=ws.reduce((a,w)=>a+(w.realPlayers||0),0);
+ document.getElementById('bots').textContent=ws.reduce((a,w)=>a+(w.aiPlayers||0),0);
+ document.getElementById('director').textContent=ws.some(w=>w.director==='online')?'آنلاین':'آماده';
+}
+setRole('admin');
+</script></body></html>
