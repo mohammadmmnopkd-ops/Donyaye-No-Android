@@ -27,19 +27,26 @@ jobs:
         run: |
           wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
           unzip -q gradle-8.7-bin.zip -d /opt
-          echo "/opt/gradle-8.7/bin" >> $GITHUB_PATH
+          echo "/opt/gradle-8.7/bin" >> "$GITHUB_PATH"
 
-      - name: نصب ابزار اندروید
+      - name: آماده‌سازی پروژه
         run: |
-          yes | sdkmanager --licenses > /dev/null || true
-          sdkmanager "platforms;android-35" "build-tools;35.0.0"
+          if [ -d "dn" ]; then
+            echo "PROJECT_DIR=dn" >> "$GITHUB_ENV"
+          elif [ -d "app" ]; then
+            echo "PROJECT_DIR=." >> "$GITHUB_ENV"
+          else
+            echo "پوشه app پیدا نشد"
+            exit 1
+          fi
 
       - name: ساخت APK
-        working-directory: dn
-        run: gradle --no-daemon assembleDebug
+        run: |
+          cd "$PROJECT_DIR"
+          gradle --no-daemon assembleDebug
 
-      - name: قرار دادن APK
+      - name: ذخیره APK
         uses: actions/upload-artifact@v4
         with:
           name: Donyaye-No-APK
-          path: dn/app/build/outputs/apk/debug/*.apk
+          path: "**/build/outputs/apk/debug/*.apk"
