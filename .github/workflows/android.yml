@@ -8,7 +8,6 @@ on:
 
 jobs:
   build:
-    name: ساخت برنامه اندروید
     runs-on: ubuntu-latest
 
     steps:
@@ -21,16 +20,17 @@ jobs:
           distribution: temurin
           java-version: '17'
 
-      - name: آماده‌سازی Gradle
-        uses: gradle/actions/setup-gradle@v4
+      - name: نصب Gradle
+        uses: gradle/actions/setup-gradle@v6
+        with:
+          gradle-version: '8.7'
 
       - name: ساخت APK
-        run: |
-          chmod +x ./gradlew
-          ./gradlew assembleDebug
+        working-directory: dn
+        run: gradle assembleDebug
 
       - name: ذخیره APK
         uses: actions/upload-artifact@v4
         with:
           name: Donyaye-No-APK
-          path: app/build/outputs/apk/debug/*.apk
+          path: dn/app/build/outputs/apk/debug/*.apk
