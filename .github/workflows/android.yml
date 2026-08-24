@@ -20,16 +20,25 @@ jobs:
           distribution: temurin
           java-version: '17'
 
+      - name: آماده‌سازی اندروید
+        uses: android-actions/setup-android@v3
+
       - name: نصب Gradle
-        uses: gradle/actions/setup-gradle@v6
-        with:
-          gradle-version: '8.7'
+        run: |
+          wget -q https://services.gradle.org/distributions/gradle-8.7-bin.zip
+          unzip -q gradle-8.7-bin.zip -d /opt
+          echo "/opt/gradle-8.7/bin" >> $GITHUB_PATH
+
+      - name: نصب ابزار اندروید
+        run: |
+          yes | sdkmanager --licenses > /dev/null || true
+          sdkmanager "platforms;android-35" "build-tools;35.0.0"
 
       - name: ساخت APK
         working-directory: dn
-        run: gradle assembleDebug
+        run: gradle --no-daemon assembleDebug
 
-      - name: ذخیره APK
+      - name: قرار دادن APK
         uses: actions/upload-artifact@v4
         with:
           name: Donyaye-No-APK
