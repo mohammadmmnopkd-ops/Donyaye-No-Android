@@ -1,0 +1,36 @@
+name: ساخت APK دنیای نو
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    name: ساخت برنامه اندروید
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: دریافت پروژه
+        uses: actions/checkout@v4
+
+      - name: نصب جاوا
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: آماده‌سازی Gradle
+        uses: gradle/actions/setup-gradle@v4
+
+      - name: ساخت APK
+        run: |
+          chmod +x ./gradlew
+          ./gradlew assembleDebug
+
+      - name: ذخیره APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Donyaye-No-APK
+          path: app/build/outputs/apk/debug/*.apk
