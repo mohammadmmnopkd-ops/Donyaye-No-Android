@@ -11,8 +11,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: دریافت پروژه
+      - name: دریافت فایل‌ها
         uses: actions/checkout@v4
+
+      - name: پیدا کردن و باز کردن ZIP
+        run: |
+          ZIP=$(find . -maxdepth 2 -type f -name "*.zip" | head -1)
+
+          if [ -z "$ZIP" ]; then
+            echo "فایل ZIP بازی پیدا نشد"
+            exit 1
+          fi
+
+          mkdir project
+          unzip -q "$ZIP" -d project
+
+          echo "فایل‌های پروژه:"
+          find project -maxdepth 3 -type f | head -50
 
       - name: نصب جاوا
         uses: actions/setup-java@v4
@@ -29,24 +44,13 @@ jobs:
           unzip -q gradle-8.7-bin.zip -d /opt
           echo "/opt/gradle-8.7/bin" >> "$GITHUB_PATH"
 
-      - name: آماده‌سازی پروژه
-        run: |
-          if [ -d "dn" ]; then
-            echo "PROJECT_DIR=dn" >> "$GITHUB_ENV"
-          elif [ -d "app" ]; then
-            echo "PROJECT_DIR=." >> "$GITHUB_ENV"
-          else
-            echo "پوشه app پیدا نشد"
-            exit 1
-          fi
-
       - name: ساخت APK
         run: |
-          cd "$PROJECT_DIR"
+          cd project/dn
           gradle --no-daemon assembleDebug
 
-      - name: ذخیره APK
+      - name: تحویل APK
         uses: actions/upload-artifact@v4
         with:
           name: Donyaye-No-APK
-          path: "**/build/outputs/apk/debug/*.apk"
+          path: project/dn/app/build/outputs/apk/debug/*.apk
